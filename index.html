@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ja" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Builder (Python/discord.py)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            750: '#2d3748',
+                            850: '#1a202c',
+                            950: '#0d1117',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Blockly Library -->
+    <script src="https://unpkg.com/blockly@9.0.0/blockly.min.js"></script>
+    <script src="https://unpkg.com/blockly@9.0.0/python_compressed.js"></script> <!-- Python Generator -->
+    <script src="https://unpkg.com/blockly@9.0.0/msg/ja.js"></script> <!-- 日本語化パック -->
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, where, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.firebaseImports = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, getDoc, onSnapshot, setLogLevel };
+    </script>
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Blocklyエディタのコンテナ */
+        #blocklyDiv {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            z-index: 10;
+        }
+
+        /* ツールボックスのカスタマイズ */
+        .blocklyToolboxDiv {
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            padding-top: 1rem;
+        }
+        .dark .blocklyToolboxDiv {
+            background-color: #111827;
+            border-right: 1px solid #374151;
+        }
+
+        .blocklyTreeLabel {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            padding: 8px 0;
+            font-size: 0.95rem;
+        }
+        
+        .blocklyTreeRow {
+            height: 44px !important;
+            line-height: 44px !important;
+            padding-left: 16px !important;
+            border-left: 5px solid transparent;
+            margin-bottom: 6px;
+            transition: all 0.2s ease;
+            border-radius: 0 8px 8px 0;
+            margin-right: 12px;
+        }
+        
+        /* Light Mode */
+        .blocklyTreeRow:not(.blocklyTreeSelected):hover {
+            background-color: #e2e8f0;
+            border-left-color: #cbd5e1;
+        }
+        .blocklyTreeSelected {
+            background-color: #eff6ff !important;
+            border-left-color: #3b82f6 !important;
+            color: #2563eb !important;
+        }
+
+        /* Dark Mode */
+        .dark .blocklyTreeLabel { color: #e5e7eb; }
+        .dark .blocklyTreeRow:not(.blocklyTreeSelected):hover {
+            background-color: #1f2937;
+            border-left-color: #4b5563;
+        }
+        .dark .blocklyTreeSelected {
+            background-color: #1e3a8a !important;
+            border-left-color: #60a5fa !important;
+            color: #93c5fd !important;
+        }
+        .dark .blocklyFlyoutBackground {
+            fill: #1f2937;
+            fill-opacity: 0.95;
+        }
+
+        /* コード出力エリア */
+        #codeOutput {
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            line-height: 1.5;
+        }
+
+        /* モーダルアニメーション */
+        .modal-content {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.2s ease-out;
+        }
+        .show-modal .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 flex flex-col h-screen overflow-hidden transition-colors duration-300">
+
+    <!-- ヘッダー -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm px-6 py-3 flex justify-between items-center z-20 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-md">
+                <i data-lucide="bot" class="text-white w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-800 dark:text-white leading-tight">Discord Bot Builder</h1>
+                <p class="text-xs text-indigo-600 dark:text-indigo-400 font-medium">日本語版 Python (discord.py)</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="hidden md:flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-600">
+                <span id="authStatus">接続中...</span>
+                <span id="saveStatus" class="ml-2 font-bold text-green-600 dark:text-green-400"></span>
+            </div>
+
+            <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors" title="テーマ切り替え">
+                <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+                <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
+            </button>
+
+            <button id="showCodeBtn" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium shadow-lg hover:shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5">
+                <i data-lucide="code" class="w-4 h-4"></i>
+                <span>コードを作成</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- メインエリア -->
+    <main class="flex-grow relative w-full h-full">
+        <div id="blocklyDiv"></div>
+        
+        <!-- ツールボックス定義 (多機能化 & わかりやすい日本語) -->
+        <xml id="toolbox" style="display: none">
+            <category name="イベント" colour="#e67e22">
+                <block type="on_ready"></block>
+                <block type="on_message_create"></block>
+                <block type="on_command_executed"></block>
+                <block type="get_message_content"></block>
+                <block type="get_command_arg"></block>
+            </category>
+            
+            <category name="情報取得" colour="#8e44ad">
+                <block type="get_user_info"></block>
+                <block type="get_channel_info"></block>
+                <block type="get_server_info"></block>
+            </category>
+
+            <category name="メッセージ" colour="#3498db">
+                <block type="reply_message"></block>
+                <block type="send_channel_message"></block>
+                <block type="edit_reply"></block>
+                <block type="delete_message"></block>
+                <block type="purge_messages"></block>
+                <block type="pin_message"></block>
+                <block type="add_reaction"></block>
+                <block type="create_thread"></block>
+            </category>
+            
+            <category name="チャンネル操作" colour="#3498db">
+                <block type="create_text_channel"></block>
+                <block type="delete_channel"></block>
+            </category>
+
+            <category name="Bot設定" colour="#9b59b6">
+                <block type="set_bot_status"></block>
+                <block type="wait_seconds"></block>
+            </category>
+
+            <category name="管理機能" colour="#e74c3c">
+                <block type="timeout_user"></block>
+                <block type="kick_user"></block>
+                <block type="ban_user"></block>
+                <block type="add_user_role"></block>
+                <block type="remove_user_role"></block>
+                <block type="create_role"></block>
+                <block type="change_nickname"></block>
+            </category>
+            
+            <category name="埋め込み (Embed)" colour="#2ecc71">
+                <block type="create_embed"></block>
+                <block type="set_embed_property"></block>
+                <block type="add_embed_field"></block>
+            </category>
+
+            <sep></sep>
+
+            <category name="ロジック" colour="#f1c40f">
+                <block type="controls_if"></block>
+                <block type="logic_compare"></block>
+                <block type="logic_operation"></block>
+                <block type="logic_negate"></block>
+                <block type="logic_boolean"></block>
+            </category>
+
+            <category name="ループ" colour="#5b67a5">
+                <block type="controls_repeat_ext"></block>
+                <block type="controls_whileUntil"></block>
+            </category>
+
+            <category name="数値・計算" colour="#5b80a5">
+                <block type="math_number"></block>
+                <block type="math_arithmetic"></block>
+                <block type="random_integer"></block>
+            </category>
+
+            <category name="テキスト" colour="#5ba58c">
+                <block type="text"></block>
+                <block type="text_join"></block>
+                <block type="text_length"></block>
+                <block type="text_print"></block>
+            </category>
+        </xml>
+    </main>
+
+    <!-- コード出力モーダル -->
+    <div id="codeModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden modal-content border border-gray-200 dark:border-gray-700">
+            <!-- モーダルヘッダー -->
+            <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
+                <div class="flex items-center gap-2">
+                    <div class="bg-blue-100 dark:bg-blue-900 p-1.5 rounded text-blue-600 dark:text-blue-300">
+                        <i data-lucide="file-code" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-800 dark:text-white">Botコード (Python)</h2>
+                </div>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- モーダルボディ -->
+            <div class="p-6 overflow-y-auto flex-grow bg-white dark:bg-gray-900">
+                <div class="mb-6 space-y-3 bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                    <h3 class="font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
+                        <i data-lucide="info" class="w-4 h-4"></i> 実行方法
+                    </h3>
+                    <ol class="list-decimal list-inside text-sm text-indigo-700 dark:text-indigo-300 space-y-1">
+                        <li>以下のコードを <code class="bg-white dark:bg-gray-800 px-1 py-0.5 rounded border border-indigo-200 dark:border-indigo-700">bot.py</code> という名前で保存します。</li>
+                        <li>ターミナルで <code class="bg-white dark:bg-gray-800 px-1 py-0.5 rounded border border-indigo-200 dark:border-indigo-700 select-all">pip install discord.py</code> を実行します。</li>
+                        <li><code class="bg-white dark:bg-gray-800 px-1 py-0.5 rounded border border-indigo-200 dark:border-indigo-700">python bot.py</code> を実行してBotを起動します。</li>
+                    </ol>
+                </div>
+
+                <div class="relative group">
+                    <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button id="copyCodeBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded shadow-lg flex items-center gap-1 border border-indigo-500">
+                            <i data-lucide="copy" class="w-3 h-3"></i> コピー
+                        </button>
+                    </div>
+                    <pre id="codeOutput" class="bg-[#1e1e1e] text-[#d4d4d4] p-4 rounded-lg text-sm shadow-inner border border-gray-700 tab-4"></pre>
+                </div>
+            </div>
+            
+            <!-- モーダルフッター -->
+            <div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-center text-gray-500 flex justify-center items-center gap-1">
+                <i data-lucide="shield-check" class="w-3 h-3"></i> TokenはDiscord Developer Portalから取得し、他人には教えないでください。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // グローバル変数
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+
+        let db;
+        let auth;
+        let userId = null;
+        let workspace;
+        let isAuthReady = false;
+
+        // ===========================================
+        // 0. テーマ設定 & 日本語化設定
+        // ===========================================
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Blocklyテーマ設定
+        const modernLightTheme = Blockly.Theme.defineTheme('modernLight', {
+            'base': Blockly.Themes.Classic,
+            'componentStyles': {
+                'workspaceBackgroundColour': '#f3f4f6',
+                'toolboxBackgroundColour': '#f8fafc',
+                'toolboxForegroundColour': '#334155',
+                'flyoutBackgroundColour': '#ffffff',
+                'flyoutForegroundColour': '#334155',
+                'flyoutOpacity': 1,
+                'scrollbarColour': '#cbd5e1',
+                'insertionMarkerColour': '#fff',
+                'insertionMarkerOpacity': 0.3,
+            }
+        });
+
+        const modernDarkTheme = Blockly.Theme.defineTheme('modernDark', {
+            'base': Blockly.Themes.Classic,
+            'componentStyles': {
+                'workspaceBackgroundColour': '#111827',
+                'toolboxBackgroundColour': '#1f2937',
+                'toolboxForegroundColour': '#e2e8f0',
+                'flyoutBackgroundColour': '#1f2937',
+                'flyoutForegroundColour': '#e2e8f0',
+                'flyoutOpacity': 1,
+                'scrollbarColour': '#4b5563',
+                'insertionMarkerColour': '#fff',
+                'insertionMarkerOpacity': 0.3,
+            },
+            'blockStyles': {
+                'hat_blocks': {'colourPrimary': '#a55b80'}
+            }
+        });
+
+        function toggleTheme() {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                if (workspace) workspace.setTheme(modernLightTheme);
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                if (workspace) workspace.setTheme(modernDarkTheme);
+            }
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // ===========================================
+        // 1. Blockly カスタムブロック定義 (完全日本語)
+        // ===========================================
+
+        // --- イベント ---
+        Blockly.Blocks['on_ready'] = {
+            init: function() {
+                this.appendDummyInput().appendField("🏁 Botが起動したとき");
+                this.appendStatementInput("DO").setCheck(null).appendField("実行する処理");
+                this.setColour(30);
+                this.setTooltip("Botのログインが完了し、準備ができた時に1回だけ実行されます。");
+            }
+        };
+
+        Blockly.Blocks['on_message_create'] = {
+            init: function() {
+                this.appendDummyInput().appendField("📩 メッセージを受信したとき");
+                this.appendStatementInput("DO").setCheck(null).appendField("実行する処理");
+                this.setColour(30);
+                this.setTooltip("誰かがメッセージを送信した時に実行されます。");
+            }
+        };
+        
+        Blockly.Blocks['get_message_content'] = {
+            init: function() {
+                this.appendDummyInput().appendField("受信したメッセージの内容");
+                this.setOutput(true, "String");
+                this.setColour(30);
+                this.setTooltip("受信したメッセージのテキスト本文を取得します。");
+            }
+        };
+
+        Blockly.Blocks['on_command_executed'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("⚡ スラッシュコマンド /")
+                    .appendField(new Blockly.FieldTextInput("hello"), "COMMAND_NAME")
+                    .appendField("を使われたとき");
+                this.appendStatementInput("DO").setCheck(null).appendField("実行する処理");
+                this.setColour(230);
+                this.setTooltip("指定したコマンド（例: /hello）が実行された時の動作を作ります。");
+            }
+        };
+
+        Blockly.Blocks['get_command_arg'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("コマンド引数")
+                    .appendField(new Blockly.FieldTextInput("name"), "ARG_NAME")
+                    .appendField("の値");
+                this.setOutput(true, ["String", "Number"]);
+                this.setColour(230);
+                this.setTooltip("コマンドと一緒に送られたデータ（引数）を取得します。");
+            }
+        };
+
+        // --- 情報取得 (New) ---
+        Blockly.Blocks['get_user_info'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("👤 実行者の")
+                    .appendField(new Blockly.FieldDropdown([
+                        ["ユーザーID", "id"],
+                        ["名前 (ユーザー名)", "name"],
+                        ["表示名 (ニックネーム)", "display_name"],
+                        ["メンション (<@ID>)", "mention"]
+                    ]), "TYPE");
+                this.setOutput(true, "String");
+                this.setColour(260); // Purple
+                this.setTooltip("コマンドを実行した人、またはメッセージを送信した人の情報を取得します。");
+            }
+        };
+
+        Blockly.Blocks['get_channel_info'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("📺 現在の")
+                    .appendField(new Blockly.FieldDropdown([
+                        ["チャンネルID", "id"],
+                        ["チャンネル名", "name"],
+                        ["メンション (<#ID>)", "mention"]
+                    ]), "TYPE");
+                this.setOutput(true, "String");
+                this.setColour(260);
+                this.setTooltip("メッセージが送信されたチャンネルの情報を取得します。");
+            }
+        };
+
+        Blockly.Blocks['get_server_info'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("🌐 サーバーの")
+                    .appendField(new Blockly.FieldDropdown([
+                        ["サーバーID", "id"],
+                        ["サーバー名", "name"],
+                        ["メンバー数", "member_count"]
+                    ]), "TYPE");
+                this.setOutput(true, ["String", "Number"]);
+                this.setColour(260);
+                this.setTooltip("現在のサーバー（ギルド）の情報を取得します。");
+            }
+        };
+
+        // --- アクション ---
+        Blockly.Blocks['reply_message'] = {
+            init: function() {
+                this.appendValueInput("MESSAGE").setCheck(["String", "Embed"]).appendField("↩️ 返信する");
+                this.appendDummyInput()
+                    .appendField("自分だけに表示")
+                    .appendField(new Blockly.FieldCheckbox("FALSE"), "EPHEMERAL");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+                this.setTooltip("コマンドやメッセージに対して返信をします。「自分だけに表示」はスラッシュコマンドでのみ有効です。");
+            }
+        };
+
+        Blockly.Blocks['edit_reply'] = {
+            init: function() {
+                this.appendValueInput("MESSAGE").setCheck(["String", "Embed"]).appendField("✏️ 返信を編集する");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+                this.setTooltip("既に送信した返信の内容を書き換えます。");
+            }
+        };
+
+        Blockly.Blocks['send_channel_message'] = {
+            init: function() {
+                this.appendValueInput("CHANNEL_ID").setCheck("String").appendField("#️⃣ チャンネルID");
+                this.appendValueInput("MESSAGE").setCheck(["String", "Embed"]).appendField("に送信");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+                this.setTooltip("指定したIDのチャンネルにメッセージを送ります。");
+            }
+        };
+
+        Blockly.Blocks['delete_message'] = {
+            init: function() {
+                this.appendDummyInput().appendField("🗑️ このメッセージを削除");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+                this.setTooltip("受信したメッセージを削除します（Botに権限が必要です）。");
+            }
+        };
+        
+        Blockly.Blocks['purge_messages'] = {
+            init: function() {
+                this.appendValueInput("LIMIT").setCheck("Number").appendField("🗑️ メッセージを一括削除（");
+                this.appendDummyInput().appendField("件）");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+                this.setTooltip("現在のチャンネルのメッセージを最新から指定した件数だけ削除します。");
+            }
+        };
+
+        Blockly.Blocks['pin_message'] = {
+            init: function() {
+                this.appendDummyInput().appendField("📌 このメッセージをピン留め");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+            }
+        };
+        
+        Blockly.Blocks['add_reaction'] = {
+            init: function() {
+                this.appendValueInput("EMOJI").setCheck("String").appendField("👍 リアクションを付ける");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+                this.setTooltip("メッセージに絵文字リアクションを付けます。絵文字はそのまま入力してください（例: 👍）。");
+            }
+        };
+        
+        Blockly.Blocks['create_thread'] = {
+            init: function() {
+                this.appendValueInput("NAME").setCheck("String").appendField("🧵 スレッドを作成（名前");
+                this.appendDummyInput().appendField("）");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+                this.setTooltip("現在のチャンネルに新しいスレッドを作成します。");
+            }
+        };
+
+        // --- チャンネル操作 ---
+        Blockly.Blocks['create_text_channel'] = {
+            init: function() {
+                this.appendValueInput("NAME").setCheck("String").appendField("📁 テキストチャンネル作成");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(340);
+            }
+        };
+
+        Blockly.Blocks['delete_channel'] = {
+            init: function() {
+                this.appendValueInput("CHANNEL_ID").setCheck("String").appendField("🗑️ チャンネル削除 (ID");
+                this.appendDummyInput().appendField(")");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(340);
+            }
+        };
+
+        // --- Bot設定 & ユーティリティ ---
+        Blockly.Blocks['set_bot_status'] = {
+            init: function() {
+                this.appendValueInput("STATUS").setCheck("String").appendField("🎮 ステータスを");
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldDropdown([
+                        ["プレイ中", "playing"],
+                        ["視聴中", "watching"],
+                        ["再生中", "listening"],
+                    ]), "TYPE")
+                    .appendField("にする");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(260);
+                this.setTooltip("Botのプロフィールに表示されるアクティビティを設定します。");
+            }
+        };
+
+        Blockly.Blocks['wait_seconds'] = {
+            init: function() {
+                this.appendValueInput("SECONDS").setCheck("Number").appendField("⏳");
+                this.appendDummyInput().appendField("秒待つ");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(260);
+                this.setTooltip("指定した秒数だけ処理を一時停止します。");
+            }
+        };
+
+        // --- Embed ---
+        Blockly.Blocks['create_embed'] = {
+            init: function() {
+                this.appendDummyInput().appendField("✨ 新しい埋め込み(Embed)作成");
+                this.appendStatementInput("PROPERTIES").setCheck(null);
+                this.setOutput(true, "Embed");
+                this.setColour(100);
+            }
+        };
+
+        Blockly.Blocks['set_embed_property'] = {
+            init: function() {
+                this.appendValueInput("VALUE").setCheck("String")
+                    .appendField("設定：")
+                    .appendField(new Blockly.FieldDropdown([
+                        ["タイトル", "title"],
+                        ["説明文", "description"],
+                        ["色 (0xHex)", "color"],
+                        ["画像URL", "image"],
+                    ]), "PROPERTY");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(100);
+            }
+        };
+
+        Blockly.Blocks['add_embed_field'] = {
+            init: function() {
+                this.appendValueInput("NAME").setCheck("String").appendField("項目名");
+                this.appendValueInput("VALUE").setCheck("String").appendField("内容");
+                this.appendDummyInput().appendField("横並び").appendField(new Blockly.FieldCheckbox("TRUE"), "INLINE");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(100);
+            }
+        };
+
+        // --- 管理 ---
+        Blockly.Blocks['kick_user'] = {
+            init: function() {
+                this.appendValueInput("USER_ID").setCheck("String").appendField("👢 Kickする (ID");
+                this.appendValueInput("REASON").setCheck("String").appendField("理由");
+                this.appendDummyInput().appendField(")");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(0);
+                this.setTooltip("ユーザーをサーバーから追放します。");
+            }
+        };
+
+        Blockly.Blocks['ban_user'] = {
+            init: function() {
+                this.appendValueInput("USER_ID").setCheck("String").appendField("🚫 BANする (ID");
+                this.appendValueInput("REASON").setCheck("String").appendField("理由");
+                this.appendDummyInput().appendField(")");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(0);
+                this.setTooltip("ユーザーを永久追放します。");
+            }
+        };
+
+        Blockly.Blocks['timeout_user'] = {
+            init: function() {
+                this.appendValueInput("USER_ID").setCheck("String").appendField("🔇 タイムアウト (ID");
+                this.appendValueInput("MINUTES").setCheck("Number").appendField("分");
+                this.appendDummyInput().appendField("間)");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(0);
+                this.setTooltip("指定した時間、ユーザーが発言できないようにします。");
+            }
+        };
+
+        Blockly.Blocks['add_user_role'] = {
+            init: function() {
+                this.appendValueInput("USER_ID").setCheck("String").appendField("➕ ロール付与 (ユーザーID");
+                this.appendValueInput("ROLE_ID").setCheck("String").appendField("ロールID");
+                this.appendDummyInput().appendField(")");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(0);
+            }
+        };
+        
+        Blockly.Blocks['remove_user_role'] = {
+            init: function() {
+                this.appendValueInput("USER_ID").setCheck("String").appendField("➖ ロール剥奪 (ユーザーID");
+                this.appendValueInput("ROLE_ID").setCheck("String").appendField("ロールID");
+                this.appendDummyInput().appendField(")");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(0);
+            }
+        };
+
+        Blockly.Blocks['create_role'] = {
+            init: function() {
+                this.appendValueInput("NAME").setCheck("String").appendField("🔰 新規ロール作成 (名前");
+                this.appendDummyInput().appendField(")");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(0);
+            }
+        };
+        
+        Blockly.Blocks['change_nickname'] = {
+            init: function() {
+                this.appendValueInput("USER_ID").setCheck("String").appendField("🏷️ ニックネーム変更 (ID");
+                this.appendValueInput("NAME").setCheck("String").appendField("新しい名前");
+                this.appendDummyInput().appendField(")");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(0);
+            }
+        };
+
+        Blockly.Blocks['random_integer'] = {
+            init: function() {
+                this.appendValueInput("FROM").setCheck("Number").appendField("🎲 ランダムな数");
+                this.appendValueInput("TO").setCheck("Number").appendField("から");
+                this.setOutput(true, "Number");
+                this.setColour(230);
+            }
+        };
+
+        // ===========================================
+        // 2. Python (discord.py) Generator Definitions
+        // ===========================================
+
+        // 起動時
+        Blockly.Python['on_ready'] = function(block) {
+            const branch = Blockly.Python.statementToCode(block, 'DO') || '    pass';
+            return `@bot.event\nasync def on_ready():\n    print(f'Logged in as {bot.user}')\n    try:\n        synced = await bot.tree.sync()\n        print(f"Synced {len(synced)} command(s)")\n    except Exception as e:\n        print(e)\n${branch}\n`;
+        };
+
+        // メッセージ受信
+        Blockly.Python['on_message_create'] = function(block) {
+            const branch = Blockly.Python.statementToCode(block, 'DO') || '    pass';
+            // メッセージコンテキストとして 'message' 変数を提供
+            return `@bot.event\nasync def on_message(message):\n    if message.author == bot.user:\n        return\n    # コンテキスト変数のエイリアス\n    ctx = message\n    user = message.author\n${branch}\n    await bot.process_commands(message)\n`;
+        };
+
+        Blockly.Python['get_message_content'] = function(block) {
+            return ['message.content', Blockly.Python.ORDER_ATOMIC];
+        };
+
+        // スラッシュコマンド
+        Blockly.Python['on_command_executed'] = function(block) {
+            const commandName = block.getFieldValue('COMMAND_NAME').toLowerCase();
+            const branch = Blockly.Python.statementToCode(block, 'DO') || '    pass';
+            // インタラクションコンテキストとして 'interaction' 変数を提供、共通利用のために 'ctx' も定義
+            return `@bot.tree.command(name="${commandName}", description="${commandName} command")\nasync def ${commandName}(interaction: discord.Interaction):\n    # コンテキスト変数のエイリアス\n    ctx = interaction\n    user = interaction.user\n${branch}\n`;
+        };
+
+        Blockly.Python['get_command_arg'] = function(block) {
+            const argName = block.getFieldValue('ARG_NAME');
+            return [`# 引数プレースホルダー: ${argName} (関数定義で引数を追加してください)`, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        // 情報取得 (New)
+        Blockly.Python['get_user_info'] = function(block) {
+            const type = block.getFieldValue('TYPE');
+            // user変数はイベントハンドラ内で自動定義されている前提
+            let code = `user.${type}`;
+            return [code, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        Blockly.Python['get_channel_info'] = function(block) {
+            const type = block.getFieldValue('TYPE');
+            let code = `ctx.channel.${type}`;
+            return [code, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        Blockly.Python['get_server_info'] = function(block) {
+            const type = block.getFieldValue('TYPE');
+            // スラッシュコマンド: interaction.guild, メッセージ: message.guild
+            let code = `ctx.guild.${type}`;
+            return [code, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        // 返信・送信
+        Blockly.Python['reply_message'] = function(block) {
+            const msg = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_NONE) || '""';
+            const ephemeral = block.getFieldValue('EPHEMERAL') === 'TRUE' ? 'True' : 'False';
+            
+            // Interaction(スラッシュコマンド)とMessage(通常メッセージ)の両方に対応するためのラッパーロジック
+            // Pythonコード側で型判定を行う
+            let contentCode;
+            if (msg.startsWith('discord.Embed')) {
+                contentCode = `embed=${msg}`;
+            } else {
+                contentCode = `content=${msg}`;
+            }
+
+            return `
+if isinstance(ctx, discord.Interaction):
+    await ctx.response.send_message(${contentCode}, ephemeral=${ephemeral})
+else:
+    # 通常メッセージへの返信ではephemeralは無視されます
+    await ctx.reply(${contentCode})
+`;
+        };
+
+        Blockly.Python['edit_reply'] = function(block) {
+            const msg = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_NONE) || '""';
+            let contentCode = msg.startsWith('discord.Embed') ? `embed=${msg}` : `content=${msg}`;
+            
+            // Interactionコンテキストのみ有効
+            return `
+if isinstance(ctx, discord.Interaction):
+    await ctx.edit_original_response(${contentCode})
+`;
+        };
+
+        Blockly.Python['send_channel_message'] = function(block) {
+            const channelId = Blockly.Python.valueToCode(block, 'CHANNEL_ID', Blockly.Python.ORDER_NONE) || '""';
+            const msg = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_NONE) || '""';
+            const contentArg = msg.startsWith('discord.Embed') ? `embed=${msg}` : `content=${msg}`;
+            return `channel = bot.get_channel(int(${channelId}))\nif channel:\n    await channel.send(${contentArg})\n`;
+        };
+
+        Blockly.Python['delete_message'] = function(block) {
+            // メッセージイベント(message)かインタラクション(interaction)かによって削除方法が異なる場合の考慮
+            // ここでは簡易的にmessage変数が存在する場合（on_message内）を想定、またはinteraction.message
+            return `
+if 'message' in locals():
+    await message.delete()
+elif isinstance(ctx, discord.Interaction):
+    # スラッシュコマンドの場合、コマンドへの応答を削除するか、元メッセージを削除するかは文脈によるが
+    # ここでは何もしないか、あるいは引数で指定が必要。
+    pass
+`;
+        };
+        
+        Blockly.Python['purge_messages'] = function(block) {
+            const limit = Blockly.Python.valueToCode(block, 'LIMIT', Blockly.Python.ORDER_NONE) || '5';
+            return `
+if isinstance(ctx, discord.Interaction):
+    await ctx.channel.purge(limit=${limit})
+else:
+    await ctx.channel.purge(limit=${limit})
+`;
+        };
+
+        Blockly.Python['pin_message'] = function(block) {
+            return `
+if 'message' in locals():
+    await message.pin()
+`;
+        };
+        
+        Blockly.Python['add_reaction'] = function(block) {
+            const emoji = Blockly.Python.valueToCode(block, 'EMOJI', Blockly.Python.ORDER_NONE) || '"👍"';
+            return `try:\n    if 'message' in locals(): await message.add_reaction(${emoji})\nexcept:\n    pass\n`;
+        };
+        
+        Blockly.Python['create_thread'] = function(block) {
+            const name = Blockly.Python.valueToCode(block, 'NAME', Blockly.Python.ORDER_NONE) || '"New Thread"';
+            return `try:\n    if 'message' in locals(): await message.create_thread(name=${name})\nexcept:\n    pass\n`;
+        };
+
+        // チャンネル操作
+        Blockly.Python['create_text_channel'] = function(block) {
+            const name = Blockly.Python.valueToCode(block, 'NAME', Blockly.Python.ORDER_NONE) || '"new-channel"';
+            return `
+if ctx.guild:
+    await ctx.guild.create_text_channel(name=${name})
+`;
+        };
+
+        Blockly.Python['delete_channel'] = function(block) {
+            const channelId = Blockly.Python.valueToCode(block, 'CHANNEL_ID', Blockly.Python.ORDER_NONE);
+            return `
+ch = bot.get_channel(int(${channelId}))
+if ch:
+    await ch.delete()
+`;
+        };
+
+        // Bot設定
+        Blockly.Python['set_bot_status'] = function(block) {
+            const status = Blockly.Python.valueToCode(block, 'STATUS', Blockly.Python.ORDER_NONE) || '"Bot"';
+            const type = block.getFieldValue('TYPE');
+            let activityCode = `discord.Game(name=${status})`;
+            if (type === 'watching') activityCode = `discord.Activity(type=discord.ActivityType.watching, name=${status})`;
+            if (type === 'listening') activityCode = `discord.Activity(type=discord.ActivityType.listening, name=${status})`;
+            
+            return `await bot.change_presence(activity=${activityCode})\n`;
+        };
+
+        Blockly.Python['wait_seconds'] = function(block) {
+            const sec = Blockly.Python.valueToCode(block, 'SECONDS', Blockly.Python.ORDER_NONE) || '1';
+            return `await asyncio.sleep(${sec})\n`;
+        };
+
+        // Embed
+        Blockly.Python['create_embed'] = function(block) {
+            return [`discord.Embed(title="New Embed", description="内容を設定してください")`, Blockly.Python.ORDER_ATOMIC];
+        };
+        
+        Blockly.Python['set_embed_property'] = function(block) {
+            return `# Embedの設定はPythonコード上で直接編集することを推奨します\n`;
+        };
+        
+        Blockly.Python['add_embed_field'] = function(block) {
+            return `# Embedフィールド追加\n`;
+        };
+
+        // 管理機能
+        Blockly.Python['kick_user'] = function(block) {
+            const user = Blockly.Python.valueToCode(block, 'USER_ID', Blockly.Python.ORDER_NONE);
+            const reason = Blockly.Python.valueToCode(block, 'REASON', Blockly.Python.ORDER_NONE);
+            return `user = ctx.guild.get_member(int(${user}))\nif user:\n    await user.kick(reason=${reason})\n`;
+        };
+        
+        Blockly.Python['ban_user'] = function(block) {
+            const user = Blockly.Python.valueToCode(block, 'USER_ID', Blockly.Python.ORDER_NONE);
+            const reason = Blockly.Python.valueToCode(block, 'REASON', Blockly.Python.ORDER_NONE);
+            return `user = ctx.guild.get_member(int(${user}))\nif user:\n    await user.ban(reason=${reason})\n`;
+        };
+        
+        Blockly.Python['timeout_user'] = function(block) {
+            const user = Blockly.Python.valueToCode(block, 'USER_ID', Blockly.Python.ORDER_NONE);
+            const mins = Blockly.Python.valueToCode(block, 'MINUTES', Blockly.Python.ORDER_NONE) || '5';
+            return `user = ctx.guild.get_member(int(${user}))\nif user:\n    await user.timeout(datetime.timedelta(minutes=${mins}))\n`;
+        };
+
+        Blockly.Python['add_user_role'] = function(block) {
+            const user = Blockly.Python.valueToCode(block, 'USER_ID', Blockly.Python.ORDER_NONE);
+            const role = Blockly.Python.valueToCode(block, 'ROLE_ID', Blockly.Python.ORDER_NONE);
+            return `member = ctx.guild.get_member(int(${user}))\nrole = ctx.guild.get_role(int(${role}))\nif member and role:\n    await member.add_roles(role)\n`;
+        };
+
+        Blockly.Python['remove_user_role'] = function(block) {
+            const user = Blockly.Python.valueToCode(block, 'USER_ID', Blockly.Python.ORDER_NONE);
+            const role = Blockly.Python.valueToCode(block, 'ROLE_ID', Blockly.Python.ORDER_NONE);
+            return `member = ctx.guild.get_member(int(${user}))\nrole = ctx.guild.get_role(int(${role}))\nif member and role:\n    await member.remove_roles(role)\n`;
+        };
+
+        Blockly.Python['create_role'] = function(block) {
+            const name = Blockly.Python.valueToCode(block, 'NAME', Blockly.Python.ORDER_NONE);
+            return `await ctx.guild.create_role(name=${name})\n`;
+        };
+        
+        Blockly.Python['change_nickname'] = function(block) {
+            const user = Blockly.Python.valueToCode(block, 'USER_ID', Blockly.Python.ORDER_NONE);
+            const name = Blockly.Python.valueToCode(block, 'NAME', Blockly.Python.ORDER_NONE);
+            return `member = ctx.guild.get_member(int(${user}))\nif member:\n    await member.edit(nick=${name})\n`;
+        };
+
+        Blockly.Python['random_integer'] = function(block) {
+            const from = Blockly.Python.valueToCode(block, 'FROM', Blockly.Python.ORDER_NONE) || '0';
+            const to = Blockly.Python.valueToCode(block, 'TO', Blockly.Python.ORDER_NONE) || '100';
+            return [`random.randint(${from}, ${to})`, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        // ===========================================
+        // 3. Main Logic
+        // ===========================================
+
+        const codeModal = document.getElementById('codeModal');
+        const showCodeBtn = document.getElementById('showCodeBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const codeOutput = document.getElementById('codeOutput');
+        const saveStatus = document.getElementById('saveStatus');
+
+        // Save/Load Logic
+        const saveProject = async () => {
+            if (!db || !userId) return;
+            const xml = Blockly.Xml.workspaceToDom(workspace);
+            const xmlText = Blockly.Xml.domToText(xml);
+            const userProjectRef = window.firebaseImports.doc(db, `artifacts/${appId}/users/${userId}/discord_bot_projects/main_project`);
+            try {
+                saveStatus.textContent = '保存中...';
+                await window.firebaseImports.setDoc(userProjectRef, { xml: xmlText, savedAt: new Date().toISOString() });
+                saveStatus.textContent = '保存完了';
+                setTimeout(() => saveStatus.textContent = '', 2000);
+            } catch (error) {
+                console.error("Save error:", error);
+                saveStatus.textContent = 'エラー';
+            }
+        };
+
+        const loadProject = async () => {
+            if (!db || !userId) return;
+            const userProjectRef = window.firebaseImports.doc(db, `artifacts/${appId}/users/${userId}/discord_bot_projects/main_project`);
+            try {
+                const docSnap = await window.firebaseImports.getDoc(userProjectRef);
+                if (docSnap.exists()) {
+                    const xml = Blockly.Xml.textToDom(docSnap.data().xml);
+                    Blockly.Xml.clearWorkspaceAndLoadFromXml(xml, workspace);
+                }
+            } catch (error) {
+                console.error("Load error:", error);
+            }
+        };
+
+        const generatePythonCode = () => {
+            let rawCode = Blockly.Python.workspaceToCode(workspace);
+            
+            const boilerplate = `
+import discord
+from discord import app_commands
+from discord.ext import commands
+import random
+import asyncio
+import datetime
+
+# インテントの設定（Botの権限設定）
+intents = discord.Intents.default()
+intents.message_content = True # メッセージの内容を読み取る権限
+intents.members = True # メンバー情報を読み取る権限
+
+# Botの作成
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+# --- 作成したブロックのロジック ---
+${rawCode}
+# -------------------------------
+
+# Botの起動
+# 注意: Bot Tokenは他人に教えないでください
+bot.run('YOUR_BOT_TOKEN_HERE')
+`;
+            return boilerplate.trim();
+        };
+
+        const initializeApp = async () => {
+            if (firebaseConfig) {
+                const app = window.firebaseImports.initializeApp(firebaseConfig);
+                db = window.firebaseImports.getFirestore(app);
+                auth = window.firebaseImports.getAuth(app);
+                
+                await new Promise(resolve => {
+                    const unsubscribe = window.firebaseImports.onAuthStateChanged(auth, async (user) => {
+                        if (!user) {
+                            if (initialAuthToken) await window.firebaseImports.signInWithCustomToken(auth, initialAuthToken);
+                            else await window.firebaseImports.signInAnonymously(auth);
+                            resolve();
+                        } else {
+                            userId = user.uid;
+                            document.getElementById('authStatus').textContent = 'オンライン';
+                            isAuthReady = true;
+                            unsubscribe();
+                            resolve();
+                        }
+                    });
+                });
+            } else {
+                document.getElementById('authStatus').textContent = 'オフラインモード';
+                isAuthReady = true;
+                userId = 'offline-user';
+            }
+
+            const blocklyDiv = document.getElementById('blocklyDiv');
+            const toolbox = document.getElementById('toolbox');
+            
+            workspace = Blockly.inject(blocklyDiv, {
+                toolbox: toolbox,
+                horizontalLayout: false,
+                trashcan: true,
+                zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
+                renderer: 'zelos',
+                theme: modernLightTheme
+            });
+
+            if (isAuthReady) await loadProject();
+
+            workspace.addChangeListener((e) => {
+                if (e.isUiEvent || e.type === Blockly.Events.FINISHED_LOADING) return;
+                saveProject();
+            });
+
+            showCodeBtn.addEventListener('click', () => {
+                codeOutput.textContent = generatePythonCode();
+                codeModal.classList.remove('hidden');
+                codeModal.classList.add('flex');
+                setTimeout(() => codeModal.classList.add('show-modal'), 10);
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                codeModal.classList.remove('show-modal');
+                setTimeout(() => {
+                    codeModal.classList.remove('flex');
+                    codeModal.classList.add('hidden');
+                }, 200);
+            });
+            
+            copyCodeBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(codeOutput.textContent).then(() => {
+                    const originalText = copyCodeBtn.innerHTML;
+                    copyCodeBtn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> コピー完了';
+                    lucide.createIcons();
+                    setTimeout(() => {
+                        copyCodeBtn.innerHTML = originalText;
+                        lucide.createIcons();
+                    }, 2000);
+                });
+            });
+        };
+
+        window.onload = initializeApp;
+
+    </script>
+</body>
+</html>
