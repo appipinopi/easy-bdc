@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Discord Bot Builder v4.1</title>
+    <title>Discord Bot Builder (Public Edition)</title>
     
-    <!-- Favicon (SVG Data URI) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='16' fill='%234f46e5' /%3E%3Ccircle cx='22' cy='26' r='6' fill='white' /%3E%3Ccircle cx='42' cy='26' r='6' fill='white' /%3E%3Cpath d='M20 42 Q32 52 44 42' stroke='white' stroke-width='4' fill='none' stroke-linecap='round' /%3E%3C/svg%3E">
 
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -29,15 +27,12 @@
             }
         }
     </script>
-    <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Blockly Library -->
     <script src="https://unpkg.com/blockly@9.0.0/blockly.min.js"></script>
     <script src="https://unpkg.com/blockly@9.0.0/python_compressed.js"></script>
     <script src="https://unpkg.com/blockly@9.0.0/msg/ja.js"></script>
     
-    <!-- Icons (Lucide) -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
@@ -50,15 +45,14 @@
             z-index: 10;
         }
 
-        /* ツールボックスのカスタマイズ (線を削除) */
         .blocklyToolboxDiv {
             background-color: #f8fafc;
-            border-right: none; /* 境界線を削除 */
+            border-right: none;
             padding-top: 1rem;
         }
         .dark .blocklyToolboxDiv {
             background-color: #111827;
-            border-right: none; /* 境界線を削除 */
+            border-right: none;
         }
 
         .blocklyTreeLabel {
@@ -79,7 +73,6 @@
             margin-right: 12px;
         }
         
-        /* Light Mode */
         .blocklyTreeRow:not(.blocklyTreeSelected):hover {
             background-color: #e2e8f0;
             border-left-color: #cbd5e1;
@@ -90,7 +83,6 @@
             color: #2563eb !important;
         }
 
-        /* Dark Mode */
         .dark .blocklyTreeLabel { color: #e5e7eb; }
         .dark .blocklyTreeRow:not(.blocklyTreeSelected):hover {
             background-color: #1f2937;
@@ -106,7 +98,6 @@
             fill-opacity: 0.95;
         }
 
-        /* コード出力エリア */
         #codeOutput {
             max-height: 400px;
             overflow-y: auto;
@@ -128,22 +119,20 @@
 </head>
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 flex flex-col h-screen overflow-hidden transition-colors duration-300">
 
-    <!-- ヘッダー -->
     <header class="bg-white dark:bg-gray-800 shadow-sm px-6 py-3 flex justify-between items-center z-20 border-b border-gray-200 dark:border-gray-700">
         <div class="flex items-center gap-3">
             <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-md">
                 <i data-lucide="bot" class="w-6 h-6 text-white"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold text-gray-800 dark:text-white leading-tight">Easy Discord Bot Builder v4.1</h1>
-                <p class="text-xs font-medium text-indigo-600 dark:text-indigo-400">create by himais0giiiin!</p>
+                <h1 class="text-xl font-bold text-gray-800 dark:text-white leading-tight">Discord Bot Builder</h1>
+                <p class="text-xs font-medium text-indigo-600 dark:text-indigo-400">Public Edition (Python)</p>
             </div>
         </div>
 
         <div class="flex items-center gap-3">
             <span id="saveStatus" class="mr-2 text-xs font-bold text-green-600 opacity-0 transition-opacity duration-500 dark:text-green-400">保存しました</span>
 
-            <!-- ファイル操作ボタン -->
             <input type="file" id="importInput" accept=".xml" class="hidden">
             <button id="importBtn" class="p-2 text-gray-600 transition-colors rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600" title="プロジェクトを読込 (XML)">
                 <i data-lucide="upload" class="w-5 h-5"></i>
@@ -164,11 +153,9 @@
         </div>
     </header>
 
-    <!-- メインエリア -->
     <main class="relative w-full h-full flex-grow">
         <div id="blocklyDiv"></div>
         
-        <!-- ツールボックス定義 -->
         <xml id="toolbox" style="display: none">
             <category name="イベント" colour="#e67e22">
                 <block type="on_ready"></block>
@@ -283,10 +270,8 @@
         </xml>
     </main>
 
-    <!-- コード出力モーダル -->
     <div id="codeModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 backdrop-blur-sm bg-gray-900/50">
         <div class="flex flex-col w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-xl shadow-2xl bg-white dark:bg-gray-800 modal-content border border-gray-200 dark:border-gray-700">
-            <!-- モーダルヘッダー -->
             <div class="flex items-center justify-between p-5 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <div class="flex items-center gap-2">
                     <div class="p-1.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
@@ -299,14 +284,12 @@
                 </button>
             </div>
             
-            <!-- モーダルボディ -->
             <div class="flex-grow p-6 overflow-y-auto bg-white dark:bg-gray-900">
                 <div class="mb-6 space-y-3 p-4 rounded-lg border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-100 dark:border-indigo-800">
                     <h3 class="flex items-center gap-2 font-bold text-indigo-800 dark:text-indigo-300">
                         <i data-lucide="info" class="w-4 h-4"></i> 実行方法
                     </h3>
                     <ol class="space-y-1 text-sm list-decimal list-inside text-indigo-700 dark:text-indigo-300">
-                        <li>まず、 <code class="px-1 py-0.5 rounded border dark:bg-gray-800 bg-white border-indigo-200 dark:border-indigo-700">python</code> をデバイスにインストールしてください。</li>                        
                         <li>以下のコードを <code class="px-1 py-0.5 rounded border dark:bg-gray-800 bg-white border-indigo-200 dark:border-indigo-700">bot.py</code> という名前で保存します。</li>
                         <li>ターミナルで <code class="px-1 py-0.5 rounded border select-all dark:bg-gray-800 bg-white border-indigo-200 dark:border-indigo-700">pip install discord.py</code> を実行します。</li>
                         <li>ボイス機能を使う場合: <code class="px-1 py-0.5 rounded border select-all dark:bg-gray-800 bg-white border-indigo-200 dark:border-indigo-700">pip install "discord.py[voice]"</code></li>
@@ -324,14 +307,12 @@
                 </div>
             </div>
             
-            <!-- モーダルフッター -->
             <div class="flex items-center justify-center gap-1 p-3 text-xs text-center text-gray-500 border-t bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <i data-lucide="shield-check" class="w-3 h-3"></i> TokenはDiscord Developer Portalから取得し、他人には教えないでください。
             </div>
         </div>
     </div>
 
-    <!-- カスタムJavaScript -->
     <script>
         lucide.createIcons();
 
@@ -339,7 +320,6 @@
         const STORAGE_KEY = 'discord_bot_builder_workspace_public';
 
         const setupBlocklyEnvironment = () => {
-            // --- 0. テーマ設定 ---
             const modernLightTheme = Blockly.Theme.defineTheme('modernLight', {
                 'base': Blockly.Themes.Classic,
                 'componentStyles': {
@@ -375,11 +355,6 @@
 
             Blockly.Python.INDENT = '    ';
             
-            // ===========================================
-            // 1. Blockly カスタムブロック定義
-            // ===========================================
-
-            // イベント
             Blockly.Blocks['on_ready'] = {
                 init: function() {
                     this.appendDummyInput().appendField("🏁 Botが起動したとき");
@@ -443,7 +418,6 @@
                 }
             };
 
-            // 情報取得
             Blockly.Blocks['get_user_info'] = {
                 init: function() {
                     this.appendDummyInput()
@@ -459,7 +433,6 @@
                 }
             };
 
-            // NEW: メンバー詳細
             Blockly.Blocks['get_member_detail'] = {
                 init: function() {
                     this.appendDummyInput()
@@ -503,7 +476,6 @@
                 }
             };
 
-            // ロール判定
             Blockly.Blocks['member_has_role'] = {
                 init: function() {
                     this.appendValueInput("USER").setCheck("String").appendField("❓ ユーザー");
@@ -515,7 +487,6 @@
                 }
             };
 
-            // 時間取得
             Blockly.Blocks['get_current_time'] = {
                 init: function() {
                     this.appendDummyInput().appendField("🕒 現在時刻 (文字列)");
@@ -524,7 +495,6 @@
                 }
             };
 
-            // メッセージアクション
             Blockly.Blocks['reply_message'] = {
                 init: function() {
                     this.appendValueInput("MESSAGE").setCheck(["String", "Embed"]).appendField("↩️ 返信する");
@@ -537,7 +507,6 @@
                 }
             };
 
-            // 応答保留
             Blockly.Blocks['defer_reply'] = {
                 init: function() {
                     this.appendDummyInput()
@@ -560,7 +529,6 @@
                 }
             };
 
-            // NEW: メッセージIDで編集
             Blockly.Blocks['edit_message_by_id'] = {
                 init: function() {
                     this.appendValueInput("CHANNEL_ID").setCheck("String").appendField("✏️ 編集: チャンネルID");
@@ -629,8 +597,6 @@
                 }
             };
 
-            // --- 高度な操作 ---
-            // NEW: メッセージ待機
             Blockly.Blocks['wait_for_message'] = {
                 init: function() {
                     this.appendValueInput("TIMEOUT").setCheck("Number").appendField("⏳ 返信を待つ (最大");
@@ -641,7 +607,6 @@
                 }
             };
 
-            // NEW: コンソール出力
             Blockly.Blocks['print_to_console'] = {
                 init: function() {
                     this.appendValueInput("TEXT").setCheck(null).appendField("🖨️ コンソールに表示");
@@ -652,7 +617,6 @@
                 }
             };
 
-            // チャンネル操作・ボイス
             Blockly.Blocks['join_voice_channel'] = {
                 init: function() {
                     this.appendDummyInput().appendField("🔊 実行者のボイスチャンネルに参加");
@@ -691,7 +655,6 @@
                 }
             };
 
-            // Bot設定
             Blockly.Blocks['set_bot_status'] = {
                 init: function() {
                     this.appendValueInput("STATUS").setCheck("String").appendField("🎮 ステータスを");
@@ -718,7 +681,6 @@
                 }
             };
 
-            // Embed
             Blockly.Blocks['create_embed'] = {
                 init: function() {
                     this.appendDummyInput().appendField("✨ 新しい埋め込み(Embed)作成");
@@ -755,7 +717,6 @@
                 }
             };
 
-            // 管理
             Blockly.Blocks['kick_user'] = {
                 init: function() {
                     this.appendValueInput("USER_ID").setCheck("String").appendField("👢 Kickする (ID");
@@ -843,7 +804,6 @@
                 }
             };
             
-            // リストからランダム選択
             Blockly.Blocks['random_choice'] = {
                 init: function() {
                     this.appendValueInput("LIST").setCheck("Array").appendField("🎲 リスト");
@@ -869,7 +829,6 @@
                 }
             };
 
-            // NEW: 文字列置換
             Blockly.Blocks['text_replace'] = {
                 init: function() {
                     this.appendValueInput("TEXT").setCheck("String").appendField("テキスト");
@@ -882,10 +841,6 @@
                 }
             };
                 
-            // ===========================================
-            // 2. Python (discord.py) Generator
-            // ===========================================
-
             const getBranchCode = (block, name) => {
                 let code = Blockly.Python.statementToCode(block, name);
                 if (!code || code.trim() === '') {
@@ -963,7 +918,6 @@ ${branch.trimEnd()}
                 return [`(${code} if "user" in locals() else "Unknown")`, Blockly.Python.ORDER_ATOMIC];
             };
 
-            // NEW: 詳細情報
             Blockly.Python['get_member_detail'] = function(block) {
                 const type = block.getFieldValue('TYPE');
                 let code = `user.${type}`;
@@ -986,7 +940,6 @@ ${branch.trimEnd()}
                 return [`(${code} if "ctx" in locals() and ctx.guild else "Unknown")`, Blockly.Python.ORDER_ATOMIC];
             };
 
-            // ロール判定
             Blockly.Python['member_has_role'] = function(block) {
                 const userCode = Blockly.Python.valueToCode(block, 'USER', Blockly.Python.ORDER_NONE) || '0';
                 const roleId = Blockly.Python.valueToCode(block, 'ROLE_ID', Blockly.Python.ORDER_NONE) || '0';
@@ -994,7 +947,6 @@ ${branch.trimEnd()}
                 return [code, Blockly.Python.ORDER_ATOMIC];
             };
 
-            // 時間取得
             Blockly.Python['get_current_time'] = function(block) {
                 return [`datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')`, Blockly.Python.ORDER_ATOMIC];
             };
@@ -1018,7 +970,6 @@ if 'ctx' in locals():
 `;
             };
 
-            // 応答保留
             Blockly.Python['defer_reply'] = function(block) {
                 const ephemeral = block.getFieldValue('EPHEMERAL') === 'TRUE' ? 'True' : 'False';
                 return `
@@ -1039,7 +990,6 @@ if 'ctx' in locals() and isinstance(ctx, discord.Interaction):
 `;
             };
 
-            // NEW: IDで編集
             Blockly.Python['edit_message_by_id'] = function(block) {
                 const channelId = Blockly.Python.valueToCode(block, 'CHANNEL_ID', Blockly.Python.ORDER_NONE) || '0';
                 const messageId = Blockly.Python.valueToCode(block, 'MESSAGE_ID', Blockly.Python.ORDER_NONE) || '0';
@@ -1123,28 +1073,19 @@ except Exception:
 `;
             };
 
-            // NEW: メッセージ待機 (Helper関数なしでインライン展開)
             Blockly.Python['wait_for_message'] = function(block) {
                 const timeout = Blockly.Python.valueToCode(block, 'TIMEOUT', Blockly.Python.ORDER_NONE) || '30';
-                // 安全のため即時関数(lambda)内でawaitはできないので、ヘルパー関数を定義するか、
-                // try-exceptブロックで変数を設定する形が一般的だが、
-                // ここではBlocklyのOutputブロックの制約上、値を返す必要がある。
-                // 複雑な非同期式になるため、bot.wait_forを直接awaitする。
-                // タイムアウトエラーは捕捉できないため、ユーザーには「タイムアウトするとエラーになる」と認識してもらうか、
-                // 本当はカスタム関数ブロック推奨。
                 const code = `
 (await bot.wait_for('message', check=lambda m: m.channel == ctx.channel and m.author == user, timeout=${timeout})).content
 `.trim();
                 return [code, Blockly.Python.ORDER_ATOMIC];
             };
 
-            // NEW: コンソールログ
             Blockly.Python['print_to_console'] = function(block) {
                 const text = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_NONE) || '""';
                 return `print(${text})\n`;
             };
 
-            // ボイスチャンネル参加
             Blockly.Python['join_voice_channel'] = function(block) {
                 return `
 if 'user' in locals() and user.voice:
@@ -1152,7 +1093,6 @@ if 'user' in locals() and user.voice:
 `;
             };
 
-            // ボイスチャンネル切断
             Blockly.Python['leave_voice_channel'] = function(block) {
                 return `
 if 'ctx' in locals() and ctx.guild.voice_client:
@@ -1358,7 +1298,6 @@ ${returnCode.trimEnd()}
                 return `${list}.append(${item})\n`;
             };
             
-            // リストからランダム選択
             Blockly.Python['random_choice'] = function(block) {
                 const list = Blockly.Python.valueToCode(block, 'LIST', Blockly.Python.ORDER_NONE) || '[]';
                 return [`random.choice(${list})`, Blockly.Python.ORDER_ATOMIC];
@@ -1431,14 +1370,12 @@ ${returnCode.trimEnd()}
                 return code;
             };
             
-            // --- 数値・計算ブロック ---
             Blockly.Python['random_integer'] = function(block) {
                 const from = Blockly.Python.valueToCode(block, 'FROM', Blockly.Python.ORDER_NONE) || '0';
                 const to = Blockly.Python.valueToCode(block, 'TO', Blockly.Python.ORDER_NONE) || '100';
                 return [`random.randint(int(${from}), int(${to}))`, Blockly.Python.ORDER_ATOMIC];
             };
 
-            // NEW: 文字列置換
             Blockly.Python['text_replace'] = function(block) {
                 const text = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_MEMBER) || "''";
                 const from = Blockly.Python.valueToCode(block, 'FROM', Blockly.Python.ORDER_NONE) || "''";
@@ -1446,7 +1383,6 @@ ${returnCode.trimEnd()}
                 return [`str(${text}).replace(str(${from}), str(${to}))`, Blockly.Python.ORDER_MEMBER];
             };
 
-            // text_charAt: 再帰エラーを修正した独自実装
             Blockly.Python['text_charAt'] = function(block) {
                 const where = block.getFieldValue('WHERE') || 'FROM_START';
                 const text = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_MEMBER) || "''";
@@ -1465,7 +1401,6 @@ ${returnCode.trimEnd()}
                     at = Blockly.isNumber(at) ? -parseInt(at, 10) : `-int(${at})`;
                     code = `${text}[${at}]`;
                 } else {
-                    // RANDOMなどは簡易的に0番目を返す(複雑化回避)
                     code = `${text}[0]`;
                 }
                 return [code, Blockly.Python.ORDER_MEMBER];
@@ -1493,10 +1428,6 @@ ${returnCode.trimEnd()}
             return { modernLightTheme, modernDarkTheme };
         };
         
-        // ===========================================
-        // 3. App Initialization
-        // ===========================================
-
         const html = document.documentElement;
 
         const toggleTheme = (modernLightTheme, modernDarkTheme) => {
@@ -1514,14 +1445,13 @@ ${returnCode.trimEnd()}
             if (!workspace) return '';
             let rawCode = Blockly.Python.workspaceToCode(workspace);
             
-            // ルートインデントの削除
             const rootIndent = Blockly.Python.INDENT;
             let cleanedCode = rawCode.split('\n')
                 .map(line => line.startsWith(rootIndent) ? line.substring(rootIndent.length) : line)
                 .join('\n').trim();
 
             const boilerplate = `
-# ライブラリインポート
+# 必要なライブラリのインポート
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -1534,14 +1464,14 @@ intents = discord.Intents.default()
 intents.message_content = True 
 intents.members = True 
 
-# Bot
+# Botの作成
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# コマンド部分
+# --- ユーザー作成ロジック ---
 ${cleanedCode}
 # --------------------------
 
-# bot.run('TOKEN') # TOKEN部分をBotトークンに置き換えてください！
+# bot.run('TOKEN') # 実行時はここにTokenを入れてください
 `;
             return boilerplate.trim();
         };
@@ -1574,12 +1504,10 @@ ${cleanedCode}
                 theme: initialTheme
             });
 
-            // --- ツールボックス固定ピンボタンの追加 ---
             const pinBtn = document.createElement('button');
             pinBtn.id = 'toolboxPinBtn';
-            // ツールボックスの背景色に馴染むスタイル
             pinBtn.className = 'absolute z-50 p-1.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm border border-transparent hover:border-indigo-100 dark:hover:border-gray-600';
-            pinBtn.style.top = '8px'; // 上端からの余白
+            pinBtn.style.top = '8px';
             
             const updatePinState = () => {
                 if (!workspace) return;
@@ -1587,7 +1515,6 @@ ${cleanedCode}
                 if (!toolbox) return;
                 
                 let isVisible = true;
-                // isVisibleメソッドの存在確認を行い、ない場合は幅で判定する安全策
                 if (typeof toolbox.isVisible === 'function') {
                     isVisible = toolbox.isVisible();
                 } else if (typeof toolbox.getWidth === 'function') {
@@ -1597,16 +1524,14 @@ ${cleanedCode}
                 const width = (typeof toolbox.getWidth === 'function') ? toolbox.getWidth() : 0;
                 
                 if (isVisible) {
-                    // ツールボックスが表示されている場合: タブの右上に配置
-                    pinBtn.style.left = `${width - 34}px`; // 幅 - ボタンサイズ - 余白
+                    pinBtn.style.left = `${width - 34}px`;
                     pinBtn.innerHTML = '<i data-lucide="pin" class="w-4 h-4 fill-indigo-500 text-indigo-600"></i>';
-                    pinBtn.classList.add('bg-white', 'dark:bg-gray-800'); // 固定時は背景あり
+                    pinBtn.classList.add('bg-white', 'dark:bg-gray-800');
                 } else {
-                    // 隠れている場合: 左端に配置
                     pinBtn.style.left = '8px';
                     pinBtn.innerHTML = '<i data-lucide="pin-off" class="w-4 h-4"></i>';
-                    pinBtn.classList.remove('bg-white', 'dark:bg-gray-800'); // 解除時は透明またはシンプルに
-                    pinBtn.classList.add('bg-white/80', 'dark:bg-gray-800/80', 'backdrop-blur'); // 浮いている感
+                    pinBtn.classList.remove('bg-white', 'dark:bg-gray-800');
+                    pinBtn.classList.add('bg-white/80', 'dark:bg-gray-800/80', 'backdrop-blur');
                 }
                 lucide.createIcons();
             };
@@ -1615,7 +1540,6 @@ ${cleanedCode}
                 const toolbox = workspace.getToolbox();
                 if (!toolbox) return;
 
-                // 現在の状態を安全に取得
                 let isVisible = true;
                 if (typeof toolbox.isVisible === 'function') {
                     isVisible = toolbox.isVisible();
@@ -1623,34 +1547,28 @@ ${cleanedCode}
                     isVisible = toolbox.getWidth() > 0;
                 }
 
-                // 安全に切り替え
                 if (typeof toolbox.setVisible === 'function') {
                     toolbox.setVisible(!isVisible);
                 }
                 
-                Blockly.svgResize(workspace); // ワークスペースのサイズ再計算
-                // 少し待ってから位置更新（アニメーション等のズレ防止）
+                Blockly.svgResize(workspace);
                 setTimeout(updatePinState, 50); 
             };
 
-            // DOMに追加
             document.getElementById('blocklyDiv').appendChild(pinBtn);
             
-            // 初期化とイベントリスナー
             setTimeout(updatePinState, 100);
             window.addEventListener('resize', () => {
                 Blockly.svgResize(workspace);
                 updatePinState();
             });
             
-            // カテゴリクリックなどで幅が変わる可能性があるため監視
             workspace.addChangeListener((e) => {
                 if (e.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
                     setTimeout(updatePinState, 50);
                 }
             });
 
-            // LocalStorage Load
             const xmlText = localStorage.getItem(STORAGE_KEY);
             if (xmlText) {
                 try {
