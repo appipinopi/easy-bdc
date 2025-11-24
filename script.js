@@ -1,4 +1,4 @@
-import Blocks from './blocks.js';
+import Blocks from './blocks';
 lucide.createIcons();
 
 let workspace;
@@ -80,6 +80,33 @@ const generatePythonCode = () => {
   if (!workspace) return '';
   let rawCode = Blockly.Python.workspaceToCode(workspace);
 
+  // --- Event Handlers for Dynamic Components ---
+  let componentEvents = '';
+  let modalEvents = '';
+
+  // Parse raw code to extract event handlers
+  const lines = rawCode.split('\n');
+  let filteredLines = [];
+  let currentEventName = null;
+  let currentEventBody = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    if (line.includes('# BUTTON_EVENT:')) {
+      currentEventName = line.split(':')[1].trim();
+      componentEvents += `        if interaction.data.get('custom_id') == '${currentEventName}':\n            await on_button_${currentEventName}(interaction)\n`;
+      filteredLines.push(line); // Keep definition
+    } else if (line.includes('# MODAL_EVENT:')) {
+      currentEventName = line.split(':')[1].trim();
+      modalEvents += `        if interaction.data.get('custom_id') == '${currentEventName}':\n            await on_modal_${currentEventName}(interaction)\n`;
+      filteredLines.push(line);
+    } else {
+      filteredLines.push(line);
+    }
+  }
+
+  rawCode = filteredLines.join('\n');
+
   // --- Optimized Boilerplate ---
   const boilerplate = `
 # Easy Discord Bot Builderによって作成されました！ 製作：@himais0giiiin
@@ -89,6 +116,7 @@ const generatePythonCode = () => {
 import discord
 from discord import app_commands
 from discord.ext import commands
+from discord import ui
 import random
 import asyncio
 import datetime
@@ -98,7 +126,6 @@ import os
 import logging
 
 # ロギング設定 (Logging Setup)
-# INFOレベル以上のログをコンソールに出力します
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 intents = discord.Intents.default()
@@ -111,13 +138,9 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 # グローバルエラーハンドラー
 @bot.event
 async def on_command_error(ctx, error):
-    # コマンドが見つからないエラーは無視する (他のBotと競合しないように)
     if isinstance(error, commands.CommandNotFound):
         return
-    # その他のエラーはログに出力
     logging.error(f"Command Error: {error}")
-    # 開発用にメッセージを返すことも可能です (運用時はコメントアウト推奨)
-    # await ctx.send(f"⚠️ エラーが発生しました: {error}")
 
 # ---JSON操作---
 def _load_json_data(filename):
@@ -136,6 +159,25 @@ def _save_json_data(filename, data):
             json.dump(data, f, ensure_ascii=False, indent=4)
     except Exception as e:
         logging.error(f"JSON Save Error: {e}")
+
+# --- モーダルクラス ---
+class EasyModal(discord.ui.Modal):
+    def __init__(self, title, custom_id, inputs):
+        super().__init__(title=title, timeout=None, custom_id=custom_id)
+        for item in inputs:
+            self.add_item(discord.ui.TextInput(label=item['label'], custom_id=item['id']))
+
+# --- インタラクションハンドラー ---
+@bot.event
+async def on_interaction(interaction):
+    try:
+        if interaction.type == discord.InteractionType.component:
+${componentEvents || '            pass'}
+        elif interaction.type == discord.InteractionType.modal_submit:
+${modalEvents || '            pass'}
+    except Exception as e:
+        print(f"Interaction Error: {e}")
+
 # ----------------------------
 
 # --- ユーザー作成部分 ---
@@ -193,6 +235,12 @@ const initializeApp = () => {
   if (savedTheme === 'dark') html.classList.add('dark');
   const initialTheme = savedTheme === 'dark' ? modernDarkTheme : modernLightTheme;
 
+  // --- パレット固定化の強制適用 (Zoom Fix) ---
+  // フライアウト（パレット）のスケールを常に1に固定するオーバーライド
+  Blockly.VerticalFlyout.prototype.getFlyoutScale = function () {
+    return 1;
+  };
+
   workspace = Blockly.inject(blocklyDiv, {
     toolbox: toolbox,
     horizontalLayout: false,
@@ -208,6 +256,14 @@ const initializeApp = () => {
     renderer: 'zelos',
     theme: initialTheme,
   });
+
+  // --- パレット（フライアウト）の固定設定 ---
+  if (workspace.getToolbox()) {
+    const flyout = workspace.getToolbox().getFlyout();
+    if (flyout) {
+      flyout.autoClose = false;
+    }
+  }
 
   // --- Layout Switching Logic ---
   const setLayout = (mode) => {
