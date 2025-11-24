@@ -3,7 +3,6 @@ import Blocks from './blocks.js';
 let workspace;
 const STORAGE_KEY = 'discord_bot_builder_workspace_v5';
 
-// --- Custom Block Definition (Pythonコード直接記述) ---
 Blockly.Blocks['custom_python_code'] = {
   init: function () {
     this.appendDummyInput().appendField('🐍 Pythonコード実行');
