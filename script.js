@@ -369,6 +369,9 @@ const initializeApp = () => {
 
   // --- モーダル表示ロジック (アニメーション付き) ---
   showCodeBtn.addEventListener('click', () => {
+    showCodeBtn.blur();
+    // Blocklyの選択ハイライトなどを解除
+    if (workspace) Blockly.hideChaff();
     codeOutput.textContent = generatePythonCode();
     codeModal.classList.remove('hidden');
     codeModal.classList.add('flex');
