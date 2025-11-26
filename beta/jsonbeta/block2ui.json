@@ -548,24 +548,29 @@
     "color": 0
   },
 
-  "ban_user": {
-    "title": "🚫 BANする",
-    "type": "statement",
-    "inputs": [
-      { "name": "USER_ID", "check": "String" },
-      { "name": "REASON", "check": "String" }
-    ],
-    "previous": true,
-    "next": true,
-    "color": 0
-  },
+  "ban_user":{
+    "version":2,
+    "title" : "🚫 BANする",
+    "type" : "statement",
+    "fields" : [
+      {"kind" : "label", "text":"(ID"},
+      {"kind" : "value","name":"USER_ID", "check":"String"},
+      {"kind" : "label", "text":"、理由"},
+      {"kind" : "value","name":"REASON", "check":"String"},
+      {"kind" : "label", "text":")"}
+    ]
+    },
 
   "timeout_user": {
+    "version":2,
     "title": "🔇 タイムアウト",
     "type": "statement",
-    "inputs": [
-      { "name": "USER_ID", "check": "String" },
-      { "name": "MINUTES", "check": "Number" }
+    "fields" : [
+      {"kind" : "label", "text":"(ID"},
+      {"kind" : "value","name":"USER_ID", "check":"String"},
+      {"kind" : "label", "text":"、分"},
+      {"kind" : "value","name":"MINUTES", "check":"Number"},
+      {"kind" : "label", "text":")"}
     ],
     "previous": true,
     "next": true,
@@ -573,11 +578,15 @@
   },
 
   "add_user_role": {
+    "version":2,
     "title": "➕ ロール付与",
     "type": "statement",
-    "inputs": [
-      { "name": "USER_ID", "check": "String" },
-      { "name": "ROLE_ID", "check": "String" }
+    "fields" : [
+      {"kind" : "label", "text":"(ユーザーID"},
+      {"kind" : "value","name":"USER_ID", "check":"String"},
+      {"kind" : "label", "text":"、ロールID"},
+      {"kind" : "value","name":"ROLE_ID", "check":"String"},
+      {"kind" : "label", "text":")"}
     ],
     "previous": true,
     "next": true,
@@ -585,11 +594,15 @@
   },
 
   "remove_user_role": {
+    "version":2,
     "title": "➖ ロール剥奪",
     "type": "statement",
-    "inputs": [
-      { "name": "USER_ID", "check": "String" },
-      { "name": "ROLE_ID", "check": "String" }
+    "fields" : [
+      {"kind" : "label", "text":"(ユーザーID"},
+      {"kind" : "value","name":"USER_ID", "check":"String"},
+      {"kind" : "label", "text":"、ロールID"},
+      {"kind" : "value","name":"ROLE_ID", "check":"String"},
+      {"kind" : "label", "text":")"}
     ],
     "previous": true,
     "next": true,

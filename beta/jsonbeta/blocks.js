@@ -24,18 +24,62 @@ export function generateBlocks() {
           this.appendDummyInput().appendField(schema.title);
         }
 
-        (schema.fields || []).forEach(f => {
-          const input = this.appendDummyInput();
+        const isV2 = schema.version === 2;
+        if (isV2) {
+          // Keep labels/inputs on one line for v2 layouts
+          this.setInputsInline(true);
+        }
 
-          if (f.inputType === "dropdown") {
-            input.appendField(new Blockly.FieldDropdown(f.options), f.name);
-          } else if (f.inputType === "checkbox") {
-            input.appendField(f.label || "");
-            input.appendField(new Blockly.FieldCheckbox(f.default === "TRUE" ? "TRUE" : "FALSE"), f.name);
-          } else if (f.inputType === "text") {
-            input.appendField(new Blockly.FieldTextInput(f.default || ""), f.name);
-          } else if (f.inputType === "multiline_text") {
-            input.appendField(new Blockly.FieldMultilineInput(f.default || ""), f.name);
+        (schema.fields || []).forEach((f, idx) => {
+          if (isV2) {
+            const kind = f.kind || "input";
+
+            if (kind === "label" || kind === "input") {
+              if (!this._dummyLine) this._dummyLine = this.appendDummyInput();
+              const line = this._dummyLine;
+
+              if (kind === "label") {
+                line.appendField(f.text || "");
+              } else {
+                const type = f.inputType || "text";
+                if (type === "dropdown") {
+                  line.appendField(new Blockly.FieldDropdown(f.options || []), f.name);
+                } else if (type === "checkbox") {
+                  line.appendField(f.label || "");
+                  line.appendField(
+                    new Blockly.FieldCheckbox(f.default === "TRUE" ? "TRUE" : "FALSE"),
+                    f.name
+                  );
+                } else if (type === "multiline_text") {
+                  line.appendField(new Blockly.FieldMultilineInput(f.default || ""), f.name);
+                } else {
+                  line.appendField(new Blockly.FieldTextInput(f.default || ""), f.name);
+                }
+              }
+            } else if (kind === "value") {
+              const val = this.appendValueInput(f.name).setCheck(f.check || null);
+              if (f.label) val.appendField(f.label);
+              if (f.align) val.setAlign(f.align);
+              // value inputs occupy their own position; force next items to start a new dummy line
+              this._dummyLine = null;
+            }
+
+            if (f.newline) {
+              this._dummyLine = null;
+            }
+          } else {
+            const input = this.appendDummyInput();
+
+            if (f.inputType === "dropdown") {
+              input.appendField(new Blockly.FieldDropdown(f.options), f.name);
+            } else if (f.inputType === "checkbox") {
+              input.appendField(f.label || "");
+              input.appendField(new Blockly.FieldCheckbox(f.default === "TRUE" ? "TRUE" : "FALSE"), f.name);
+            } else if (f.inputType === "text") {
+              input.appendField(new Blockly.FieldTextInput(f.default || ""), f.name);
+            } else if (f.inputType === "multiline_text") {
+              input.appendField(new Blockly.FieldMultilineInput(f.default || ""), f.name);
+            }
           }
         });
 
