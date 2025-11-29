@@ -463,6 +463,28 @@ const initializeApp = () => {
       lucide.createIcons();
     }, 2000);
   });
+
+  // --- EDBP Plugin Loader Modal Logic ---
+  const edbpBtn = document.getElementById('edbpBtn');
+  const edbpModal = document.getElementById('edbpModal');
+  const closeEdpbModalBtn = document.getElementById('closeEdpbModalBtn');
+
+  edbpBtn.addEventListener('click', () => {
+    edbpBtn.blur();
+    if (workspace) Blockly.hideChaff();
+    edbpModal.classList.remove('hidden');
+    edbpModal.classList.add('flex');
+    void edbpModal.offsetWidth;
+    edbpModal.classList.add('show-modal');
+  });
+
+  closeEdpbModalBtn.addEventListener('click', () => {
+    edbpModal.classList.remove('show-modal');
+    setTimeout(() => {
+      edbpModal.classList.remove('flex');
+      edbpModal.classList.add('hidden');
+    }, 300);
+  });
 };
 
 window.onload = initializeApp;
